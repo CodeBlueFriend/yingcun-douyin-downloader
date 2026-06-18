@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>映存 · 公开影像下载</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand-row">
+        <div class="mark" aria-hidden="true"><span></span></div>
+        <span class="brand">映存</span>
+        <span class="local-pill">LOCAL · 仅本机</span>
+      </div>
+      <p class="eyebrow">PUBLIC MEDIA ARCHIVE</p>
+      <h1>把值得留存的公开影像，<br><em>安静地收进本地。</em></h1>
+      <p class="lede">粘贴你有权保存的抖音公开视频分享内容。解析、选择清晰度、下载，全部在这台电脑完成。</p>
+    </header>
+
+    <section class="input-panel panel">
+      <div class="section-heading">
+        <div><span class="step">01</span><h2>分享内容</h2></div>
+        <span class="helper">支持短链与完整中文分享文案</span>
+      </div>
+      <textarea id="shareText" aria-label="分享内容" placeholder="粘贴 https://v.douyin.com/... 或完整分享文本"></textarea>
+      <div class="input-actions">
+        <div class="save-note">
+          <span class="folder-icon" aria-hidden="true"></span>
+          <span>保存至项目 <strong>downloads</strong> 目录</span>
+        </div>
+        <button id="parseButton" class="primary">解析视频 <span>→</span></button>
+      </div>
+    </section>
+
+    <section id="workspace" class="workspace is-hidden" aria-live="polite">
+      <article class="media-panel panel">
+        <div class="section-heading compact">
+          <div><span class="step">02</span><h2>视频信息</h2></div>
+          <span id="availability" class="availability">已识别公开内容</span>
+        </div>
+        <div class="media-body">
+          <div class="cover-wrap">
+            <img id="cover" alt="视频封面">
+            <span id="duration" class="duration">--:--</span>
+          </div>
+          <div class="metadata">
+            <p id="author" class="author">作者</p>
+            <h3 id="videoTitle">等待解析</h3>
+            <div class="format-block">
+              <span>可用清晰度</span>
+              <div id="formatTags" class="tags"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="download-panel panel">
+        <div class="section-heading compact">
+          <div><span class="step">03</span><h2>下载设置</h2></div>
+        </div>
+        <label for="quality">目标清晰度</label>
+        <div class="select-wrap">
+          <select id="quality">
+            <option value="best">原画 / 最高可用</option>
+            <option value="1080p">1080p</option>
+            <option value="720p">720p</option>
+            <option value="540p">540p</option>
+            <option value="worst">最低清晰度</option>
+          </select>
+        </div>
+        <div class="progress-head"><span id="progressStatus">准备下载</span><strong id="progressNumber">0%</strong></div>
+        <div class="progress-track"><div id="progressBar"></div></div>
+        <div class="metrics">
+          <span>速度 <strong id="speed">—</strong></span>
+          <span>剩余 <strong id="eta">—</strong></span>
+        </div>
+        <button id="downloadButton" class="primary full">开始下载 <span>↓</span></button>
+        <p id="result" class="result"></p>
+      </aside>
+    </section>
+
+    <div id="notice" class="notice" role="status">准备就绪</div>
+    <footer><span>只下载你有权保存的公开视频</span><i></i><span>不绕过登录、付费、DRM 或平台限制</span></footer>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

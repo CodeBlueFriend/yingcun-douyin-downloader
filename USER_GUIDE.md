@@ -28,6 +28,22 @@ python -m pip install -r requirements.txt
 
 ## 3. 启动桌面版
 
+### 推荐：本地 Web 页面
+
+```bash
+python web_app.py
+```
+
+程序会自动打开 `http://127.0.0.1:8000`。Web 页面只在当前电脑上运行，视频保存到项目的 `downloads` 目录。使用结束后回到终端按 `Ctrl+C` 停止。
+
+如果 8000 端口已被占用：
+
+```bash
+python web_app.py --port 8080
+```
+
+### PySide6 桌面窗口
+
 macOS：
 
 ```bash

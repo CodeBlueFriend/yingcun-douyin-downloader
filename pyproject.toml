@@ -23,9 +23,10 @@ dev = ["pytest>=8,<9"]
 [project.scripts]
 yingcun = "gui:main"
 yingcun-cli = "main:main"
+yingcun-web = "web_app:main"
 
 [tool.setuptools]
-py-modules = ["gui", "main"]
+py-modules = ["gui", "main", "web_app"]
 
 [tool.setuptools.packages.find]
 include = ["downloader*"]
