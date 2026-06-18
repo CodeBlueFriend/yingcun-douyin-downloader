@@ -3,6 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
+import subprocess
+import sys
 import threading
 import uuid
 import webbrowser
@@ -80,6 +83,35 @@ def resolve_output_dir(value: str) -> Path:
     except OSError as exc:
         raise ValueError("无法创建保存目录，请检查路径和写入权限") from exc
     return resolved
+
+
+def _launch_directory(path: Path) -> None:
+    try:
+        if sys.platform == "darwin":
+            subprocess.Popen(
+                ["open", str(path)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        elif sys.platform == "win32":
+            startfile = getattr(os, "startfile")
+            startfile(str(path))
+        else:
+            subprocess.Popen(
+                ["xdg-open", str(path)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+    except (AttributeError, OSError) as exc:
+        raise ValueError("无法打开文件管理器，请手动打开该保存目录") from exc
+
+
+def open_output_dir(value: str) -> Path:
+    output_dir = resolve_output_dir(value)
+    _launch_directory(output_dir)
+    return output_dir
 
 
 def _run_download(
@@ -231,6 +263,12 @@ class WebHandler(SimpleHTTPRequestHandler):
                     str(body.get("output_dir") or "./downloads"),
                 )
                 self._send_json({"job_id": job_id}, HTTPStatus.ACCEPTED)
+                return
+            if parsed.path == "/api/open-output":
+                output_dir = open_output_dir(
+                    str(body.get("output_dir") or "./downloads")
+                )
+                self._send_json({"path": str(output_dir)})
                 return
             self._send_json({"error": "接口不存在"}, HTTPStatus.NOT_FOUND)
         except (ValueError, LinkParseError, DownloadError) as exc:

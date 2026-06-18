@@ -74,7 +74,10 @@
           </select>
         </div>
         <label class="output-label" for="outputDir">保存目录</label>
-        <input id="outputDir" class="path-input" type="text" value="./downloads" spellcheck="false" autocomplete="off" aria-describedby="outputHint">
+        <div class="path-row">
+          <input id="outputDir" class="path-input" type="text" value="./downloads" spellcheck="false" autocomplete="off" aria-describedby="outputHint">
+          <button id="openOutputButton" class="open-folder" type="button" aria-label="打开保存目录">打开目录</button>
+        </div>
         <p id="outputHint" class="path-hint">支持相对路径、绝对路径和 ~/ 路径</p>
         <div class="progress-head"><span id="progressStatus">准备下载</span><strong id="progressNumber">0%</strong></div>
         <div class="progress-track"><div id="progressBar"></div></div>

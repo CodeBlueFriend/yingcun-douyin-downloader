@@ -5,6 +5,7 @@ const parseButton = $("#parseButton");
 const workspace = $("#workspace");
 const downloadButton = $("#downloadButton");
 const outputDir = $("#outputDir");
+const openOutputButton = $("#openOutputButton");
 const notice = $("#notice");
 let sessionId = null;
 let pollTimer = null;
@@ -147,5 +148,28 @@ downloadButton.addEventListener("click", async () => {
   } catch (error) {
     setDownloadBusy(false);
     setNotice(error.message, true);
+  }
+});
+
+openOutputButton.addEventListener("click", async () => {
+  const outputValue = outputDir.value.trim();
+  if (!outputValue) {
+    setNotice("请输入视频保存目录", true);
+    outputDir.focus();
+    return;
+  }
+  openOutputButton.disabled = true;
+  openOutputButton.textContent = "打开中…";
+  try {
+    const data = await request("/api/open-output", {
+      method: "POST",
+      body: JSON.stringify({ output_dir: outputValue }),
+    });
+    setNotice(`已打开保存目录：${data.path}`);
+  } catch (error) {
+    setNotice(error.message, true);
+  } finally {
+    openOutputButton.disabled = false;
+    openOutputButton.textContent = "打开目录";
   }
 });

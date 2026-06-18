@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from web_app import WebHandler, resolve_output_dir
+from web_app import WebHandler, open_output_dir, resolve_output_dir
 
 
 def test_resolve_absolute_output_directory(tmp_path: Path) -> None:
@@ -24,6 +24,19 @@ def test_output_directory_rejects_file(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="指向了文件"):
         resolve_output_dir(str(target))
+
+
+def test_open_output_directory_uses_resolved_path(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    opened: list[Path] = []
+    target = tmp_path / "folder with spaces"
+    monkeypatch.setattr("web_app._launch_directory", opened.append)
+
+    result = open_output_dir(str(target))
+
+    assert result == target
+    assert opened == [target]
 
 
 def _local_server() -> ThreadingHTTPServer:

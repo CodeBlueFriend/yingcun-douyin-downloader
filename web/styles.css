@@ -83,8 +83,12 @@ button { border: 0; font: inherit; cursor: pointer; }
 select { width: 100%; appearance: none; outline: 0; border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; background: #0e131d; color: var(--text); font: inherit; }
 .select-wrap::after { content:"⌄"; position:absolute; right:14px; top:10px; color:var(--muted); pointer-events:none; }
 .output-label { margin-top: 18px; }
+.path-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .path-input { width: 100%; outline: 0; border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; background: #0e131d; color: var(--text); font: 12px ui-monospace, monospace; transition: border-color .2s, box-shadow .2s; }
 .path-input:focus { border-color: rgba(201,255,87,.5); box-shadow: 0 0 0 4px rgba(201,255,87,.05); }
+.open-folder { border: 1px solid var(--line); border-radius: 11px; padding: 0 13px; background: #1a2130; color: #d8dce5; font: inherit; font-size: 11px; white-space: nowrap; transition: border-color .2s, background .2s; }
+.open-folder:hover { border-color: rgba(201,255,87,.38); background: #222b3b; }
+.open-folder:disabled { opacity: .5; cursor: wait; }
 .path-hint { margin: 7px 0 0; color: #687080; font-size: 9px; }
 .progress-head { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; font-size: 11px; color: var(--muted); }
 .progress-head strong { color: var(--text); font: 12px ui-monospace, monospace; }
