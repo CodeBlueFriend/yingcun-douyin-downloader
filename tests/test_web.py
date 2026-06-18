@@ -4,10 +4,26 @@ import json
 import threading
 from http.client import HTTPConnection
 from http.server import ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
 
-from web_app import WebHandler
+from web_app import WebHandler, resolve_output_dir
+
+
+def test_resolve_absolute_output_directory(tmp_path: Path) -> None:
+    target = tmp_path / "custom-downloads"
+
+    assert resolve_output_dir(str(target)) == target
+    assert target.is_dir()
+
+
+def test_output_directory_rejects_file(tmp_path: Path) -> None:
+    target = tmp_path / "not-a-directory"
+    target.write_text("content", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="指向了文件"):
+        resolve_output_dir(str(target))
 
 
 def _local_server() -> ThreadingHTTPServer:

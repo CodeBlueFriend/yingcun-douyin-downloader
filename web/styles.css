@@ -82,6 +82,10 @@ button { border: 0; font: inherit; cursor: pointer; }
 .select-wrap { position: relative; }
 select { width: 100%; appearance: none; outline: 0; border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; background: #0e131d; color: var(--text); font: inherit; }
 .select-wrap::after { content:"⌄"; position:absolute; right:14px; top:10px; color:var(--muted); pointer-events:none; }
+.output-label { margin-top: 18px; }
+.path-input { width: 100%; outline: 0; border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; background: #0e131d; color: var(--text); font: 12px ui-monospace, monospace; transition: border-color .2s, box-shadow .2s; }
+.path-input:focus { border-color: rgba(201,255,87,.5); box-shadow: 0 0 0 4px rgba(201,255,87,.05); }
+.path-hint { margin: 7px 0 0; color: #687080; font-size: 9px; }
 .progress-head { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; font-size: 11px; color: var(--muted); }
 .progress-head strong { color: var(--text); font: 12px ui-monospace, monospace; }
 .progress-track { height: 7px; background: #090d14; border-radius: 10px; overflow: hidden; margin-top: 10px; }

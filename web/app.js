@@ -4,9 +4,11 @@ const shareText = $("#shareText");
 const parseButton = $("#parseButton");
 const workspace = $("#workspace");
 const downloadButton = $("#downloadButton");
+const outputDir = $("#outputDir");
 const notice = $("#notice");
 let sessionId = null;
 let pollTimer = null;
+let activeJobId = null;
 
 function setNotice(message, isError = false) {
   notice.textContent = message;
@@ -16,6 +18,13 @@ function setNotice(message, isError = false) {
 function setBusy(button, busy, busyText, idleText) {
   button.disabled = busy;
   button.firstChild.textContent = busy ? busyText : idleText;
+}
+
+function setDownloadBusy(busy) {
+  downloadButton.disabled = busy;
+  downloadButton.innerHTML = busy
+    ? '正在下载… <span>↻</span>'
+    : '开始下载 <span>↓</span>';
 }
 
 async function request(path, options = {}) {
@@ -79,43 +88,64 @@ function updateProgress(job) {
 }
 
 async function pollJob(jobId) {
+  if (activeJobId !== jobId) return true;
   try {
     const job = await request(`/api/jobs/${jobId}`);
     updateProgress(job);
     if (job.status === "complete") {
       clearInterval(pollTimer);
       pollTimer = null;
-      downloadButton.disabled = false;
-      $("#result").textContent = `已保存：downloads/${job.filename}`;
+      activeJobId = null;
+      setDownloadBusy(false);
+      $("#result").textContent = `已保存：${job.saved_path}`;
       setNotice(job.message);
+      window.alert(`下载成功！\n\n文件已保存到：\n${job.saved_path}`);
+      return true;
     } else if (job.status === "failed") {
       clearInterval(pollTimer);
       pollTimer = null;
-      downloadButton.disabled = false;
+      activeJobId = null;
+      setDownloadBusy(false);
       setNotice(job.message, true);
+      return true;
     }
   } catch (error) {
     clearInterval(pollTimer);
     pollTimer = null;
-    downloadButton.disabled = false;
+    activeJobId = null;
+    setDownloadBusy(false);
     setNotice(error.message, true);
+    return true;
   }
+  return false;
 }
 
 downloadButton.addEventListener("click", async () => {
   if (!sessionId) return;
-  downloadButton.disabled = true;
+  const outputValue = outputDir.value.trim();
+  if (!outputValue) {
+    setNotice("请输入视频保存目录", true);
+    outputDir.focus();
+    return;
+  }
+  setDownloadBusy(true);
   $("#result").textContent = "";
-  updateProgress({ progress: 0, speed: "计算中", eta: "计算中", message: "正在创建下载任务" });
+  updateProgress({ progress: 0, speed: "计算中", eta: "计算中", message: "正在下载" });
+  setNotice("正在下载视频，请保持页面打开…");
   try {
     const data = await request("/api/download", {
       method: "POST",
-      body: JSON.stringify({ session_id: sessionId, quality: $("#quality").value }),
+      body: JSON.stringify({
+        session_id: sessionId,
+        quality: $("#quality").value,
+        output_dir: outputValue,
+      }),
     });
-    await pollJob(data.job_id);
-    pollTimer = setInterval(() => pollJob(data.job_id), 700);
+    activeJobId = data.job_id;
+    const finished = await pollJob(data.job_id);
+    if (!finished) pollTimer = setInterval(() => pollJob(data.job_id), 700);
   } catch (error) {
-    downloadButton.disabled = false;
+    setDownloadBusy(false);
     setNotice(error.message, true);
   }
 });

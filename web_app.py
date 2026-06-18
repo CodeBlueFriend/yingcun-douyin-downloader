@@ -32,11 +32,12 @@ class DownloadJob:
     eta: str = "计算中"
     message: str = "等待下载"
     filename: str | None = None
+    saved_path: str | None = None
 
 
 @dataclass(slots=True)
 class AppState:
-    sessions: dict[str, tuple[VideoInfo, DouyinDownloader]] = field(default_factory=dict)
+    sessions: dict[str, VideoInfo] = field(default_factory=dict)
     jobs: dict[str, DownloadJob] = field(default_factory=dict)
     lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -62,11 +63,28 @@ def parse_video(share_text: str) -> dict[str, Any]:
     info = client.fetch_info(resolved_url)
     session_id = uuid.uuid4().hex
     with STATE.lock:
-        STATE.sessions[session_id] = (info, client)
+        STATE.sessions[session_id] = info
     return _video_payload(session_id, info)
 
 
-def _run_download(job_id: str, session_id: str, quality: Quality) -> None:
+def resolve_output_dir(value: str) -> Path:
+    raw = value.strip() or "./downloads"
+    candidate = Path(raw).expanduser()
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    resolved = candidate.resolve()
+    if resolved.exists() and not resolved.is_dir():
+        raise ValueError("保存路径指向了文件，请选择文件夹")
+    try:
+        resolved.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise ValueError("无法创建保存目录，请检查路径和写入权限") from exc
+    return resolved
+
+
+def _run_download(
+    job_id: str, session_id: str, quality: Quality, output_dir: Path
+) -> None:
     with STATE.lock:
         session = STATE.sessions.get(session_id)
         job = STATE.jobs[job_id]
@@ -78,7 +96,8 @@ def _run_download(job_id: str, session_id: str, quality: Quality) -> None:
             job.message = "解析信息已失效，请重新解析视频"
         return
 
-    info, client = session
+    info = session
+    client = DouyinDownloader(output_dir)
 
     def progress_hook(status: Mapping[str, Any]) -> None:
         if status.get("status") != "downloading":
@@ -100,6 +119,7 @@ def _run_download(job_id: str, session_id: str, quality: Quality) -> None:
             job.progress = 100
             job.message = result.notice or "下载完成"
             job.filename = result.path.name
+            job.saved_path = str(result.path)
     except DownloadError as exc:
         with STATE.lock:
             job.status = "failed"
@@ -111,11 +131,12 @@ def _run_download(job_id: str, session_id: str, quality: Quality) -> None:
             job.message = "下载时发生未知错误，请查看日志"
 
 
-def start_download(session_id: str, quality_value: str) -> str:
+def start_download(session_id: str, quality_value: str, output_value: str) -> str:
     try:
         quality = Quality(quality_value)
     except ValueError as exc:
         raise ValueError("不支持的清晰度选项") from exc
+    output_dir = resolve_output_dir(output_value)
     with STATE.lock:
         if session_id not in STATE.sessions:
             raise ValueError("解析信息已失效，请重新解析视频")
@@ -123,7 +144,7 @@ def start_download(session_id: str, quality_value: str) -> str:
         STATE.jobs[job_id] = DownloadJob()
     thread = threading.Thread(
         target=_run_download,
-        args=(job_id, session_id, quality),
+        args=(job_id, session_id, quality, output_dir),
         daemon=True,
         name=f"download-{job_id[:8]}",
     )
@@ -176,6 +197,7 @@ class WebHandler(SimpleHTTPRequestHandler):
                         "eta": job.eta,
                         "message": job.message,
                         "filename": job.filename,
+                        "saved_path": job.saved_path,
                     }
                     if job
                     else None
@@ -206,6 +228,7 @@ class WebHandler(SimpleHTTPRequestHandler):
                 job_id = start_download(
                     str(body.get("session_id") or ""),
                     str(body.get("quality") or "best"),
+                    str(body.get("output_dir") or "./downloads"),
                 )
                 self._send_json({"job_id": job_id}, HTTPStatus.ACCEPTED)
                 return
