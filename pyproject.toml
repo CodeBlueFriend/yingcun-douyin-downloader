@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yingcun-douyin-downloader"
+version = "0.2.0"
+description = "A compliant GUI and CLI downloader for user-authorized public Douyin videos"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Project contributors" }]
+dependencies = [
+    "httpx>=0.27,<1",
+    "PySide6-Essentials>=6.7,<7",
+    "tqdm>=4.66,<5",
+    "yt-dlp>=2024.12.23",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[project.scripts]
+yingcun = "gui:main"
+yingcun-cli = "main:main"
+
+[tool.setuptools]
+py-modules = ["gui", "main"]
+
+[tool.setuptools.packages.find]
+include = ["downloader*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
