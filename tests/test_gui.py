@@ -7,7 +7,10 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PySide6")
 
-from PySide6.QtWidgets import QApplication
+try:
+    from PySide6.QtWidgets import QApplication
+except ImportError as exc:
+    pytest.skip(f"Qt system libraries are unavailable: {exc}", allow_module_level=True)
 
 from gui import APP_NAME, MainWindow
 
