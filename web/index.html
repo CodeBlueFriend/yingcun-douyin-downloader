@@ -75,7 +75,7 @@
         </div>
         <label class="output-label" for="outputDir">保存目录</label>
         <div class="path-row">
-          <input id="outputDir" class="path-input" type="text" value="./downloads" spellcheck="false" autocomplete="off" aria-describedby="outputHint">
+        <input id="outputDir" class="path-input" type="text" value="./downloads" spellcheck="false" autocomplete="off" aria-describedby="outputHint">
           <button id="openOutputButton" class="open-folder" type="button" aria-label="打开保存目录">打开目录</button>
         </div>
         <p id="outputHint" class="path-hint">支持相对路径、绝对路径和 ~/ 路径</p>
@@ -91,7 +91,10 @@
     </section>
 
     <div id="notice" class="notice" role="status">准备就绪</div>
-    <footer><span>只下载你有权保存的公开视频</span><i></i><span>不绕过登录、付费、DRM 或平台限制</span></footer>
+    <footer>
+      <span>只下载你有权保存的公开视频</span><i></i><span>不绕过登录、付费、DRM 或平台限制</span>
+      <button id="shutdownButton" class="shutdown" type="button">退出本地服务</button>
+    </footer>
   </main>
   <script src="/app.js"></script>
 </body>

@@ -102,6 +102,8 @@ select { width: 100%; appearance: none; outline: 0; border: 1px solid var(--line
 .notice.error { color: #ff8f9a; }
 footer { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 30px; color: #59606d; font-size: 10px; }
 footer i { width: 3px; height: 3px; background: #444b57; border-radius: 50%; }
+.shutdown { margin-left: 8px; border: 0; background: transparent; color: #727a89; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.shutdown:hover { color: #b9c0cc; }
 @media (max-width: 780px) {
   .shell { width: min(100% - 24px, 1160px); padding-top: 24px; }
   .workspace { grid-template-columns: 1fr; }

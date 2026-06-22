@@ -6,10 +6,19 @@ const workspace = $("#workspace");
 const downloadButton = $("#downloadButton");
 const outputDir = $("#outputDir");
 const openOutputButton = $("#openOutputButton");
+const shutdownButton = $("#shutdownButton");
 const notice = $("#notice");
 let sessionId = null;
 let pollTimer = null;
 let activeJobId = null;
+
+request("/api/config")
+  .then((config) => {
+    outputDir.value = config.default_output_dir;
+  })
+  .catch(() => {
+    // Keep the relative fallback shown in the HTML.
+  });
 
 function setNotice(message, isError = false) {
   notice.textContent = message;
@@ -171,5 +180,19 @@ openOutputButton.addEventListener("click", async () => {
   } finally {
     openOutputButton.disabled = false;
     openOutputButton.textContent = "打开目录";
+  }
+});
+
+shutdownButton.addEventListener("click", async () => {
+  shutdownButton.disabled = true;
+  try {
+    const data = await request("/api/shutdown", {
+      method: "POST",
+      body: JSON.stringify({ action: "shutdown" }),
+    });
+    document.body.innerHTML = `<main class="shell"><section class="panel input-panel"><h2>${data.message}</h2><p class="lede">现在可以关闭此浏览器页面。</p></section></main>`;
+  } catch (error) {
+    shutdownButton.disabled = false;
+    setNotice(error.message, true);
   }
 });

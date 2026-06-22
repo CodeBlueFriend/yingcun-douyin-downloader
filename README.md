@@ -2,6 +2,8 @@
 
 一款面向 Python 3.11+ 的 PySide6 桌面工具，同时提供 CLI，用于下载**用户有权保存的抖音公开视频**。项目使用 `yt-dlp` 作为解析和下载核心，`httpx` 仅用于从分享短链按正常 HTTP 重定向获得最终页面地址。GUI 仅依赖 Qt Essentials，避免安装未使用的大型组件。
 
+无需 Python 的 macOS 和 Windows 安装包可从 GitHub Releases 下载，版本选择和系统安全提示见 [RELEASE.md](RELEASE.md)。
+
 ## 功能
 
 - 提供本地 Web 页面、PySide6 桌面界面和 CLI 三种使用方式。

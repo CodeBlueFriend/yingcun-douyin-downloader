@@ -1,0 +1,86 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: macos-arm64
+          - os: macos-15-intel
+            platform: macos-x64
+          - os: windows-latest
+            platform: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install release dependencies
+        run: python -m pip install -r requirements-release.txt
+      - name: Build application
+        run: pyinstaller --noconfirm --clean Yingcun.spec
+      - name: Smoke test macOS bundle
+        if: runner.os == 'macOS'
+        run: dist/Yingcun.app/Contents/MacOS/Yingcun --help
+      - name: Package macOS bundle
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent dist/Yingcun.app Yingcun-${{ matrix.platform }}.zip
+          mkdir dmg-root
+          cp -R dist/Yingcun.app dmg-root/
+          ln -s /Applications dmg-root/Applications
+          hdiutil create -volname Yingcun -srcfolder dmg-root -ov -format UDZO Yingcun-${{ matrix.platform }}.dmg
+      - name: Smoke test Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: dist\Yingcun\Yingcun.exe --help
+      - name: Package Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path dist\Yingcun -DestinationPath Yingcun-${{ matrix.platform }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yingcun-${{ matrix.platform }}
+          path: Yingcun-${{ matrix.platform }}.*
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-files
+          merge-multiple: true
+      - name: Create checksums
+        working-directory: release-files
+        run: sha256sum Yingcun-* > SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          generate_release_notes: true
+          body: |
+            ## 映存 ${{ github.ref_name }}
+
+            本地运行的抖音公开视频下载工具。仅用于用户有权保存的公开内容。
+
+            - `Yingcun-macos-arm64.dmg`：Apple Silicon（M1/M2/M3/M4/M5）
+            - `Yingcun-macos-x64.dmg`：Intel Mac
+            - `Yingcun-windows-x64.zip`：64 位 Windows
+
+            首次运行未签名版本时，系统可能显示安全提示，详情见项目 `RELEASE.md`。

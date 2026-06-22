@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import logging
 import os
@@ -21,9 +22,17 @@ from downloader.parser import LinkParseError, extract_share_url, resolve_share_u
 from downloader.quality import Quality
 from downloader.utils import configure_logging, format_duration
 
-ROOT = Path(__file__).resolve().parent
-WEB_ROOT = ROOT / "web"
-OUTPUT_DIR = ROOT / "downloads"
+APP_VERSION = "0.3.0"
+IS_FROZEN = bool(getattr(sys, "frozen", False))
+SOURCE_ROOT = Path(__file__).resolve().parent
+RESOURCE_ROOT = Path(getattr(sys, "_MEIPASS", SOURCE_ROOT))
+WORK_ROOT = Path.home() if IS_FROZEN else SOURCE_ROOT
+WEB_ROOT = RESOURCE_ROOT / "web"
+OUTPUT_DIR = (
+    Path.home() / "Downloads" / "Yingcun"
+    if IS_FROZEN
+    else SOURCE_ROOT / "downloads"
+)
 LOGGER = logging.getLogger(__name__)
 
 
@@ -71,10 +80,10 @@ def parse_video(share_text: str) -> dict[str, Any]:
 
 
 def resolve_output_dir(value: str) -> Path:
-    raw = value.strip() or "./downloads"
-    candidate = Path(raw).expanduser()
+    raw = value.strip()
+    candidate = Path(raw).expanduser() if raw else OUTPUT_DIR
     if not candidate.is_absolute():
-        candidate = ROOT / candidate
+        candidate = WORK_ROOT / candidate
     resolved = candidate.resolve()
     if resolved.exists() and not resolved.is_dir():
         raise ValueError("保存路径指向了文件，请选择文件夹")
@@ -242,6 +251,15 @@ class WebHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/health":
             self._send_json({"status": "ok"})
             return
+        if parsed.path == "/api/config":
+            self._send_json(
+                {
+                    "version": APP_VERSION,
+                    "default_output_dir": str(OUTPUT_DIR),
+                    "packaged": IS_FROZEN,
+                }
+            )
+            return
         if parsed.path == "/":
             self.path = "/index.html"
         super().do_GET()
@@ -260,15 +278,23 @@ class WebHandler(SimpleHTTPRequestHandler):
                 job_id = start_download(
                     str(body.get("session_id") or ""),
                     str(body.get("quality") or "best"),
-                    str(body.get("output_dir") or "./downloads"),
+                    str(body.get("output_dir") or ""),
                 )
                 self._send_json({"job_id": job_id}, HTTPStatus.ACCEPTED)
                 return
             if parsed.path == "/api/open-output":
                 output_dir = open_output_dir(
-                    str(body.get("output_dir") or "./downloads")
+                    str(body.get("output_dir") or "")
                 )
                 self._send_json({"path": str(output_dir)})
+                return
+            if parsed.path == "/api/shutdown":
+                self._send_json({"message": "映存本地服务正在退出"})
+                threading.Thread(
+                    target=self.server.shutdown,
+                    daemon=True,
+                    name="web-shutdown",
+                ).start()
                 return
             self._send_json({"error": "接口不存在"}, HTTPStatus.NOT_FOUND)
         except (ValueError, LinkParseError, DownloadError) as exc:
@@ -285,11 +311,24 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def create_server(port: int) -> ThreadingHTTPServer:
+    candidates = [port] if port == 0 else list(range(port, port + 11))
+    last_error: OSError | None = None
+    for candidate in candidates:
+        try:
+            return ThreadingHTTPServer(("127.0.0.1", candidate), WebHandler)
+        except OSError as exc:
+            if exc.errno not in {errno.EADDRINUSE, 48, 10048}:
+                raise
+            last_error = exc
+    raise OSError("端口被占用：无法在指定端口及后续 10 个端口启动") from last_error
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     configure_logging(OUTPUT_DIR / "douyin_downloader.log")
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), WebHandler)
-    url = f"http://127.0.0.1:{args.port}"
+    server = create_server(args.port)
+    url = f"http://127.0.0.1:{server.server_port}"
     print(f"映存 Web 已启动：{url}")
     print("按 Ctrl+C 停止服务")
     if not args.no_browser:
