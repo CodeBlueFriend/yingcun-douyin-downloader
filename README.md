@@ -1,8 +1,22 @@
 # 映存 · 抖音公开视频下载工具
 
-一款面向 Python 3.11+ 的 PySide6 桌面工具，同时提供 CLI，用于下载**用户有权保存的抖音公开视频**。项目使用 `yt-dlp` 作为解析和下载核心，`httpx` 仅用于从分享短链按正常 HTTP 重定向获得最终页面地址。GUI 仅依赖 Qt Essentials，避免安装未使用的大型组件。
+一款本地运行的抖音公开视频下载工具，提供 Web 页面、PySide6 桌面窗口和 CLI，用于下载**用户有权保存的公开内容**。项目使用 `yt-dlp` 作为解析和下载核心，`httpx` 仅用于从分享短链按正常 HTTP 重定向获得最终页面地址。
 
-无需 Python 的 macOS 和 Windows 安装包可从 GitHub Releases 下载，版本选择和系统安全提示见 [RELEASE.md](RELEASE.md)。
+[下载最新 Release](https://github.com/CodeBlueFriend/yingcun-douyin-downloader/releases/latest) · [使用手册](USER_GUIDE.md) · [Release 安装说明](RELEASE.md)
+
+![映存 Web 界面](docs/images/web-interface.jpg)
+
+## Release 安装包
+
+无需安装 Python，前往 [GitHub Releases](https://github.com/CodeBlueFriend/yingcun-douyin-downloader/releases/latest) 下载对应系统版本：
+
+| 系统 | 下载文件 |
+| --- | --- |
+| Apple Silicon Mac（M 系列芯片） | `Yingcun-macos-arm64.dmg` |
+| Intel Mac | `Yingcun-macos-x64.dmg` |
+| 64 位 Windows 10/11 | `Yingcun-windows-x64.zip` |
+
+当前稳定版本为 [v0.3.0](https://github.com/CodeBlueFriend/yingcun-douyin-downloader/releases/tag/v0.3.0)。首次运行未签名应用时，系统可能显示安全提示，具体处理方式和 SHA256 校验方法见 [RELEASE.md](RELEASE.md)。
 
 ## 功能
 
